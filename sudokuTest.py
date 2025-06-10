@@ -1,6 +1,7 @@
 import random
 import tkinter as tk
 from tkinter import messagebox
+from memo import Memo
 
 class SudokuGenerator:
     def __init__(self):
@@ -90,11 +91,13 @@ class SudokuUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("스도쿠 게임")
+        self.memo = Memo(self.root)
         self.generator = SudokuGenerator()
         self.puzzle = self.generator.generate_puzzle()
         self.entries = [[None for _ in range(9)] for _ in range(9)]
         self.fixed_cells = {(i, j) for i in range(9) for j in range(9) if self.puzzle[i][j] != 0}
         self.create_widgets()
+
 
     def create_widgets(self):
         colors = ['#ffffff', '#e6f7ff']
@@ -106,14 +109,22 @@ class SudokuUI:
                 if (i, j) in self.fixed_cells:
                     entry.insert(0, str(self.puzzle[i][j]))
                     entry.config(state="readonly", disabledforeground="black")
+
+                else:
+                    entry.bind("<KeyRelease>", lambda e, x=i, y=j: self.memo.handle_input(x, y))
                 entry.grid(row=i, column=j, padx=2, pady=2)
                 self.entries[i][j] = entry
 
         reset_btn = tk.Button(self.root, text="초기화", command=self.reset_inputs)
         reset_btn.grid(row=9, column=0, columnspan=3, pady=10)
 
+        memo_btn = tk.Button(self.root, text="메모 모드", command=lambda: self.memo.toggle_memo_mode(None))
+        memo_btn.grid(row=9, column=6, columnspan=3, pady=10)
+
         check_btn = tk.Button(self.root, text="정답 확인", command=self.check_solution)
         check_btn.grid(row=9, column=3, columnspan=3, pady=10)
+
+        self.memo.set_entries(self.entries)
 
     def reset_inputs(self):
         for i in range(9):
@@ -154,8 +165,11 @@ class SudokuUI:
                     return False
         return True
 
+
     def run(self):
         self.root.mainloop()
+
+
 
 if __name__ == "__main__":
     game = SudokuUI()

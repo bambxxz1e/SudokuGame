@@ -1,5 +1,6 @@
 from Board import Board
 from GameUI import GameUI
+from memo import memo
 
 class SudokuGame:
     def __init__(self):
