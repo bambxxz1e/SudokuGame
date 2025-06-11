@@ -31,7 +31,7 @@ class Memo:
                     if val is not None and val.strip() != "":
                         entry.delete(0, tk.END)
                         entry.insert(0, val)
-                        entry.config(fg="gray")
+                        entry.config(fg="#cccccc")
                 #else:
                     #entry.delete(0, tk.END)
                     # entry.config(fg="black")
@@ -49,7 +49,7 @@ class Memo:
         if self.memo_mode:
             if val:
                 self.memo_values[i][j] = val
-                entry.config(fg="gray")
+                entry.config(fg="#cccccc")
             else:
                 self.memo_values[i][j] = None
         else:
