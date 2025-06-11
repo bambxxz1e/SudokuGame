@@ -6,14 +6,17 @@ from memo import Memo
 # -------------------- Board Class --------------------
 class Board:
     def __init__(self):
+        # 9x9 스도쿠 보드 초기화 (모든 칸을 0으로 시작)
         self.grid = [[0 for _ in range(9)] for _ in range(9)]
-        self.fixed_cells = set()
+        self.fixed_cells = set() # 고정된 셀 위치 저장
 
     def is_valid(self, row, col, num):
+        # 특정 숫자가 해당 셀에 들어갈 수 있는지 확인 (현 보드를 기준으로 판단)
         for i in range(9):
             if self.grid[row][i] == num or self.grid[i][col] == num:
                 return False
 
+        # 3x3 박스 안에서도 중복 없게
         box_row = (row // 3) * 3
         box_col = (col // 3) * 3
         for i in range(3):
@@ -24,6 +27,7 @@ class Board:
         return True
 
     def fill_grid(self):
+        # 백트래킹 방식으로 완성된 스도쿠 생성
         for i in range(9):
             for j in range(9):
                 if self.grid[i][j] == 0:
@@ -39,16 +43,20 @@ class Board:
         return True
 
     def generate_puzzle(self):
+        # 퍼즐 생성 (완성된 스도쿠에서 일부 숫자 제거함)
         self.fill_grid()
         puzzle = [row[:] for row in self.grid]
-        attempts = 30
+        attempts = 30 # 삭제 개수
+
         while attempts > 0:
             row, col = random.randint(0, 8), random.randint(0, 8)
+
             while puzzle[row][col] == 0:
                 row, col = random.randint(0, 8), random.randint(0, 8)
             backup = puzzle[row][col]
             puzzle[row][col] = 0
             copy = [r[:] for r in puzzle]
+
             if self.count_solutions(copy) != 1:
                 puzzle[row][col] = backup
                 attempts -= 1
@@ -57,6 +65,7 @@ class Board:
         self.fixed_cells = {(i, j) for i in range(9) for j in range(9) if puzzle[i][j] != 0}
 
     def count_solutions(self, grid):
+        # 유효한 정답 개수 세기 (무조건 1개여야 함)
         count = [0]
 
         def solve():
@@ -77,6 +86,7 @@ class Board:
         return count[0]
 
     def is_valid_cell(self, grid, row, col, num):
+        #
         for i in range(9):
             if grid[row][i] == num or grid[i][col] == num:
                 return False
@@ -89,9 +99,11 @@ class Board:
         return True
 
     def is_complete(self):
+        # 모든 셀이 채워졌는지 확인
         return all(all(cell != 0 for cell in row) for row in self.grid)
 
     def is_correct(self):
+        # 입력 값이 스도쿠 규칙에 맞는 정답인지 확인
         def check_group(group):
             return sorted(group) == list(range(1, 10))
 
@@ -110,12 +122,14 @@ class Board:
         return True
 
     def reset_board(self):
+        # 고정 셀 말고 입력한 셀만 초기화
         for i in range(9):
             for j in range(9):
                 if (i, j) not in self.fixed_cells:
                     self.grid[i][j] = 0
 
     def set_cell(self, row, col, val):
+        # 해당 셀에 값 삽입
         self.grid[row][col] = val
 
 
@@ -125,11 +139,12 @@ class GameUI:
         self.game = game
         self.root = tk.Tk()
         self.root.title("스도쿠 게임")
-        self.memo = Memo(self.root)  # 메모 기능 추가
+        self.memo = Memo(self.root)  # 메모 기능 초기화
         self.entries = [[None for _ in range(9)] for _ in range(9)]
 
         self.display_grid()
 
+        # 화면 하단 버튼 배치
         tk.Button(self.root, text="초기화", command=self.reset_board).grid(row=9, column=0, columnspan=3, pady=10)
         tk.Button(self.root, text="정답 확인", command=self.check_game).grid(row=9, column=3, columnspan=3, pady=10)
         tk.Button(self.root, text="메모 모드", command=lambda: self.memo.toggle_memo_mode(None)).grid(row=9, column=6, columnspan=3, pady=10)
@@ -137,7 +152,8 @@ class GameUI:
         self.memo.set_entries(self.entries)  # 메모 기능에 entries 전달
 
     def display_grid(self):
-        colors = ['#ffffff', '#e6f7ff']
+        # 보드 셀을 화면에 표시
+        colors = ['#ffffff', '#e6f7ff'] # 격자 배경 색 번갈아 적용 (3x3 마다)
         board = self.game.board.grid
         for i in range(9):
             for j in range(9):
@@ -153,6 +169,7 @@ class GameUI:
                 self.entries[i][j] = entry
 
     def reset_board(self):
+        # 퍼즐 리셋 (입력된 셀만 초기화)
         self.game.board.reset_board()
         for i in range(9):
             for j in range(9):
@@ -160,6 +177,7 @@ class GameUI:
                     self.entries[i][j].delete(0, tk.END)
 
     def check_game(self):
+        # 사용자의 입력 값을 보드에 반영하고 정답 확인
         for i in range(9):
             for j in range(9):
                 if (i, j) not in self.game.board.fixed_cells:
@@ -172,24 +190,29 @@ class GameUI:
         self.game.check_game_status()
 
     def show_message(self, title, msg):
+        # 팝업 메세지 출력
         messagebox.showinfo(title, msg)
 
     def run(self):
+        # UI 실행
         self.root.mainloop()
 
 
 # -------------------- SudokuGame Class --------------------
 class SudokuGame:
     def __init__(self):
+        # 게임 초기화
         self.board = Board()
         self.ui = GameUI(self)
 
     def start_game(self):
+        # 스도쿠 생성 후 UI 실행
         self.board.generate_puzzle()
         self.ui.display_grid()
         self.ui.run()
 
     def check_game_status(self):
+        # 완성 및 정답 여부 확인
         if not self.board.is_complete():
             self.ui.show_message("미완성", "모든 칸을 입력해주세요.")
         elif self.board.is_correct():
