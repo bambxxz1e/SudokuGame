@@ -147,7 +147,7 @@ class GameUI:
         self.display_grid()
 
         # 화면 하단 버튼 배치
-        tk.Button(self.root, text="초기화", command=self.reset_board).grid(row=9, column=0, columnspan=3, pady=10)
+        tk.Button(self.root, text="셀 초기화", command=self.reset_board).grid(row=9, column=0, columnspan=3, pady=10)
         tk.Button(self.root, text="정답 확인", command=self.check_game).grid(row=9, column=3, columnspan=3, pady=10)
         tk.Button(self.root, text="메모 모드", command=lambda: self.memo.toggle_memo_mode(None)).grid(row=9, column=6, columnspan=3, pady=10)
 
@@ -170,10 +170,13 @@ class GameUI:
         for i in range(9):
             for j in range(9):
                 color_index = ((i // 3) + (j // 3)) % 2
-                entry = tk.Entry(self.root, width=2, font=("Arial", 16), justify="center", bg=colors[color_index])
+                bg_color = colors[color_index]  # 배경색 미리 지정
+
+                entry = tk.Entry(self.root, width=2, font=("Arial", 16), justify="center", bg=bg_color)
+
                 if (i, j) in self.game.board.fixed_cells:
                     entry.insert(0, str(board[i][j]))
-                    entry.config(state="readonly", disabledforeground="black")
+                    entry.config(state="readonly", readonlybackground=bg_color, disabledforeground="black")
                 else:
                     entry.bind("<KeyRelease>", lambda e, x=i, y=j: self.memo.handle_input(x, y))  # 메모 핸들링 추가
 
@@ -232,8 +235,17 @@ class SudokuGame:
         else:
             self.ui.show_message("오답", "틀린 칸이 있습니다.")
 
+    # def test_full_grid_gui(self):
+        # 완성된 스도쿠 보드 생성 (잘 생성 되는지 확인용)
+    #     self.board.fill_grid()  # 정답 보드 생성
+    #     # 모든 셀을 고정 셀로 처리해서 사용자가 수정 못하게
+    #     self.board.fixed_cells = {(i, j) for i in range(9) for j in range(9)}
+    #     self.ui.display_grid()
+    #     self.ui.run()
+
 
 # -------------------- Main 실행 --------------------
 if __name__ == "__main__":
     game = SudokuGame()
     game.start_game()
+    # game.test_full_grid_gui()  # 스도쿠 정답 보드를 GUI로 확인
