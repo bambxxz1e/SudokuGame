@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import random
 from memo import Memo
+from trans import Trans
 
 # -------------------- Board Class --------------------
 class Board:
@@ -141,6 +142,7 @@ class GameUI:
         self.root.title("스도쿠 게임")
         self.memo = Memo(self.root)  # 메모 기능 초기화
         self.entries = [[None for _ in range(9)] for _ in range(9)]
+        self.alpha_value = 1.0
 
         self.display_grid()
 
@@ -150,6 +152,16 @@ class GameUI:
         tk.Button(self.root, text="메모 모드", command=lambda: self.memo.toggle_memo_mode(None)).grid(row=9, column=6, columnspan=3, pady=10)
 
         self.memo.set_entries(self.entries)  # 메모 기능에 entries 전달
+
+        transparency_btn = tk.Button(self.root, text="투명도 조절창 열기", command=self.open_transparency_window)
+        transparency_btn.grid(row=10, column=0, columnspan=9, pady=10)
+
+    def open_transparency_window(self):
+        Trans(self.root, self.alpha_value, self.set_alpha_value)  # 이제 이게 새로운 Toplevel 창 열어줌
+
+    def set_alpha_value(self, val):
+        self.alpha_value = val
+        self.root.attributes('-alpha', val)
 
     def display_grid(self):
         # 보드 셀을 화면에 표시
