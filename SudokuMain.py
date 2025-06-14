@@ -45,22 +45,23 @@ class Board:
 
     def generate_puzzle(self):
         # 퍼즐 생성 (완성된 스도쿠에서 일부 숫자 제거함)
-        self.fill_grid()
+        self.fill_grid() # 1. 완성된 정답 보드를 만듦
         puzzle = [row[:] for row in self.grid]
-        attempts = 30 # 삭제 개수
+        attempts = 20 # 2. 셀을 몇 번 지워볼 건지 설정 (즉, 지우기 시도 횟수)
 
         while attempts > 0:
             row, col = random.randint(0, 8), random.randint(0, 8)
 
-            while puzzle[row][col] == 0:
+            while puzzle[row][col] == 0: # 이미 빈 셀이면 패스
                 row, col = random.randint(0, 8), random.randint(0, 8)
+
             backup = puzzle[row][col]
-            puzzle[row][col] = 0
+            puzzle[row][col] = 0 # 셀을 비운다
             copy = [r[:] for r in puzzle]
 
             if self.count_solutions(copy) != 1:
-                puzzle[row][col] = backup
-                attempts -= 1
+                puzzle[row][col] = backup # 지웠더니 정답이 1개가 아니면 다시 복원
+                attempts -= 1 # 실패한 시도로 간주 → 시도 횟수 줄이기
 
         self.grid = puzzle
         self.fixed_cells = {(i, j) for i in range(9) for j in range(9) if puzzle[i][j] != 0}
@@ -87,7 +88,7 @@ class Board:
         return count[0]
 
     def is_valid_cell(self, grid, row, col, num):
-        #
+        # 해당 셀에 숫자 넣을 수 있는지 확인
         for i in range(9):
             if grid[row][i] == num or grid[i][col] == num:
                 return False
@@ -150,6 +151,7 @@ class GameUI:
         tk.Button(self.root, text="셀 초기화", command=self.reset_board).grid(row=9, column=0, columnspan=3, pady=10)
         tk.Button(self.root, text="정답 확인", command=self.check_game).grid(row=9, column=3, columnspan=3, pady=10)
         tk.Button(self.root, text="메모 모드", command=lambda: self.memo.toggle_memo_mode(None)).grid(row=9, column=6, columnspan=3, pady=10)
+        # 인자 있는 함수 호출 시엔 람다 사용(버튼을 누를 때 실행하도록)
 
         self.memo.set_entries(self.entries)  # 메모 기능에 entries 전달
 
@@ -208,6 +210,35 @@ class GameUI:
         # 팝업 메세지 출력
         messagebox.showinfo(title, msg)
 
+    def show_result_popup(self, message):
+        # 재도전 또는 닫기 버튼 있는 Toplevel 창 띄워줌
+        popup = tk.Toplevel(self.root)
+        popup.title("결과")
+        popup.geometry("250x120")
+        popup.resizable(False, False)
+
+        label = tk.Label(popup, text=message)
+        label.pack(pady=10)
+
+        # 버튼들 담을 프레임 생성(가로 배치 위해)
+        button_frame = tk.Frame(popup)
+        button_frame.pack(pady=10)
+
+        close_btn = tk.Button(button_frame, text="닫기", command=popup.destroy, bg="red", fg="white")
+        close_btn.pack(side='left', padx=10)
+
+        restart_btn = tk.Button(button_frame, text="재도전", command=lambda: self.restart_game(popup), bg="lightblue")
+        restart_btn.pack(side='left', padx=10)
+
+    def restart_game(self, popup_window):
+        # 재도전 버튼 클릭 시 실행(새로운 스도쿠 생성)
+        popup_window.destroy()  # 팝업 닫기
+        self.root.destroy()  # 현재 게임 창 닫기
+
+        # 새 게임 시작
+        new_game = SudokuGame()
+        new_game.start_game()
+
     def run(self):
         # UI 실행
         self.root.mainloop()
@@ -231,21 +262,19 @@ class SudokuGame:
         if not self.board.is_complete():
             self.ui.show_message("미완성", "모든 칸을 입력해주세요.")
         elif self.board.is_correct():
-            self.ui.show_message("성공", "정답입니다!")
+            self.ui.show_result_popup("🎉 정답입니다!")
         else:
-            self.ui.show_message("오답", "틀린 칸이 있습니다.")
+            self.ui.show_result_popup("❌ 오답입니다!")
 
-    # def test_full_grid_gui(self):
-        # 완성된 스도쿠 보드 생성 (잘 생성 되는지 확인용)
-    #     self.board.fill_grid()  # 정답 보드 생성
-    #     # 모든 셀을 고정 셀로 처리해서 사용자가 수정 못하게
-    #     self.board.fixed_cells = {(i, j) for i in range(9) for j in range(9)}
-    #     self.ui.display_grid()
-    #     self.ui.run()
-
-
-# -------------------- Main 실행 --------------------
-if __name__ == "__main__":
-    game = SudokuGame()
-    game.start_game()
-    # game.test_full_grid_gui()  # 스도쿠 정답 보드를 GUI로 확인
+#     def test_full_grid_gui(self):
+#         # 완성된 스도쿠 보드 생성 (잘 생성 되는지 확인용)
+#         self.board.fill_grid()  # 정답 보드 생성
+#         # 모든 셀을 고정 셀로 처리해서 사용자가 수정 못하게
+#         self.board.fixed_cells = {(i, j) for i in range(9) for j in range(9)}
+#         self.ui.display_grid()
+#         self.ui.run()
+#
+#
+# if __name__ == "__main__":
+#     game = SudokuGame()
+#     game.test_full_grid_gui()  # 스도쿠 정답 보드를 GUI로 확인

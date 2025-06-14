@@ -45,7 +45,6 @@ class Memo:
             return
 
         val = entry.get().strip()
-        print(f"Cell ({i},{j}) 입력값: '{val}'")
         if self.memo_mode:
             if val:
                 self.memo_values[i][j] = val
